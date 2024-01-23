@@ -1,44 +1,42 @@
-!/usr/bin/python3
-"""
-Log parsing
-"""
+#!/usr/bin/python3
+
+
 import sys
 
 
-def print_metrics(file_size, status_codes):
+def print_msg(status_code, total_file_size):
+    """reads stdin line by line and computes metrics.
     """
-    Print metrics
-    """
-    print("File size: {}".format(file_size))
-    codes_sorted = sorted(status_codes.keys())
-    for code in codes_sorted:
-        if status_codes[code] > 0:
-            print("{}: {}".format(code, status_codes[code]))
+
+    print("File size: {}".format(total_file_size))
+    for key, val in sorted(status_code.items()):
+        if val != 0:
+            print("{}: {}".format(key, val))
 
 
-codes_count = {'200': 0, '301': 0, '400': 0, '401': 0,
-               '403': 0, '404': 0, '405': 0, '500': 0}
-file_size_total = 0
-count = 0
+total_file_size = 0
+code = 0
+counter = 0
+status_code = {"200": 0, "301": 0, "400": 0, "401": 0,
+               "403": 0, "404": 0, "405": 0, "500": 0}
+try:
+    for line in sys.stdin:
+        parsed_line = line.split()
+        parsed_line = parsed_line[::-1]
 
-if __name__ == "__main__":
-    try:
-        for line in sys.stdin:
-            try:
-                status_code = line.split()[-2]
-                if status_code in codes_count.keys():
-                    codes_count[status_code] += 1
-                # Grab file size
-                file_size = int(line.split()[-1])
-                file_size_total += file_size
-            except Exception:
-                pass
-            # print metrics if 10 lines have been read
-            count += 1
-            if count == 10:
-                print_metrics(file_size_total, codes_count)
-                count = 0
-    except KeyboardInterrupt:
-        print_metrics(file_size_total, codes_count)
-        raise
-   print_metrics(file_size_total, codes_count)
+        if len(parsed_line) > 2:
+            counter += 1
+
+            if counter <= 10:
+                total_file_size += int(parsed_line[0])
+                code = parsed_line[1]
+
+                if (code in status_code.keys()):
+                    status_code[code] += 1
+
+            if (counter == 10):
+                print_msg(status_code, total_file_size)
+                counter = 0
+
+finally:
+    print_msg(status_code, total_file_size)
